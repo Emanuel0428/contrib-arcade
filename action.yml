@@ -1,0 +1,30 @@
+name: Contrib Arcade
+description: Turn your GitHub contribution grid into an animated retro game SVG (platformer, invaders, breakout and more)
+author: Emanuel0428
+branding:
+  icon: play-circle
+  color: green
+
+inputs:
+  github_user_name:
+    description: GitHub user whose contribution grid is used
+    required: true
+  outputs:
+    description: |
+      One file per line: path?game=<game>&palette=<palette>
+      games: platformer, blocks, invaders, breakout, life, rain
+      palettes: github-dark, github-light
+    required: true
+  github_token:
+    description: Token used to read the contribution calendar
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/cli.mjs"
+      env:
+        INPUT_GITHUB_USER_NAME: ${{ inputs.github_user_name }}
+        INPUT_OUTPUTS: ${{ inputs.outputs }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
