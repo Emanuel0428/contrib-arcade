@@ -6,6 +6,7 @@ const FRAMES = [
 ];
 const SHIP = ['......X......', '.....XXX.....', '.....XXX.....', '.XXXXXXXXXXX.', 'XXXXXXXXXXXXX', 'XXXXXXXXXXXXX', 'XXXXXXXXXXXXX'];
 const SWAY = 6, AMP = 12, DT = 1 / 60;
+const SLOW = 1.5; // playback stretch: same simulation, longer durations. Keyframe percentages are untouched.
 
 // Every contribution is an invader; the ship clears the fleet column by column.
 export default function invaders(grid, pal) {
@@ -44,12 +45,13 @@ export default function invaders(grid, pal) {
     t += DT;
   }
   const D = Math.ceil((t + 2) / SWAY) * SWAY; // whole sway cycles so the fleet loops cleanly
+  const DUR = n(D * SLOW);
   shipStops.push([t, shipX], [D, shipX]);
 
   const tf = `transform-box:fill-box;transform-origin:center`;
-  let css = `${BLINK}.fleet{animation:sway ${SWAY}s ease-in-out infinite}@keyframes sway{0%,100%{transform:translateX(${-AMP}px)}50%{transform:translateX(${AMP}px)}}`
-    + `.fa{animation:la .5s step-end infinite}.fb{animation:lb .5s step-end infinite}.fleet>g{${tf}}`
-    + `.ship{animation:ship ${D}s linear infinite}` + keyframes('ship', shipStops.map(([s, x]) => [s, `transform:translateX(${n(x)}px)`]), D);
+  let css = `${BLINK}.fleet{animation:sway ${n(SWAY * SLOW)}s ease-in-out infinite}@keyframes sway{0%,100%{transform:translateX(${-AMP}px)}50%{transform:translateX(${AMP}px)}}`
+    + `.fa{animation:la ${n(.5 * SLOW)}s step-end infinite}.fb{animation:lb ${n(.5 * SLOW)}s step-end infinite}.fleet>g{${tf}}`
+    + `.ship{animation:ship ${DUR}s linear infinite}` + keyframes('ship', shipStops.map(([s, x]) => [s, `transform:translateX(${n(x)}px)`]), D);
   let defs = '';
   for (let lv = 1; lv <= 4; lv++) FRAMES.forEach((rows, f) => { defs += `<path id="i${f}${lv}" fill="${pal.levels[lv]}" d="${pixels(rows, 'X')}"/>`; });
 
@@ -60,7 +62,7 @@ export default function invaders(grid, pal) {
     if (!grid[c][r]) continue;
     const k = killT[c][r], id = `k${c}_${r}`;
     fleet += `<g class="${id}"><use class="fa" href="#i0${grid[c][r]}" x="${x}" y="${y + 1.5}"/><use class="fb" href="#i1${grid[c][r]}" x="${x}" y="${y + 1.5}"/></g>`;
-    css += `.${id}{animation:${id} ${D}s linear infinite}` + keyframes(id, [
+    css += `.${id}{animation:${id} ${DUR}s linear infinite}` + keyframes(id, [
       [0, 'opacity:1;transform:scale(1)'], [k, 'opacity:1;transform:scale(1)'],
       [k + 0.25, 'opacity:0;transform:scale(1.8)'], [D, 'opacity:0;transform:scale(1.8)'],
     ], D);
@@ -69,7 +71,7 @@ export default function invaders(grid, pal) {
   shots.forEach((s, i) => {
     shotsSvg += `<rect class="b${i}" x="${n(s.x - 1)}" y="${SY - 14}" width="2" height="6" fill="${pal.ink}" opacity="0"/>`;
     const up = `transform:translateY(${n(s.y - (SY - 8))}px)`;
-    css += `.b${i}{animation:b${i} ${D}s linear infinite}` + keyframes(`b${i}`, [
+    css += `.b${i}{animation:b${i} ${DUR}s linear infinite}` + keyframes(`b${i}`, [
       [0, 'opacity:0;transform:translateY(0)'], [s.t0 - EPS, 'opacity:0;transform:translateY(0)'], [s.t0, 'opacity:1;transform:translateY(0)'],
       [s.t1, `opacity:1;${up}`], [s.t1 + EPS, `opacity:0;${up}`], [D, `opacity:0;${up}`],
     ], D);
